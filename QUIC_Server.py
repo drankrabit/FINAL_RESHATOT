@@ -3,7 +3,7 @@ import random
 import socket
 
 # Constants
-SERVER_ADDRESS = ('localhost', 12345)  # Server address and port
+SERVER_ADDRESS = ('localhost', 1234)  # Server address and port
 BUFFER_SIZE = 1024  # Buffer size for receiving data
 
 class QUICServerProtocol:
