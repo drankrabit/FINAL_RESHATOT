@@ -1,10 +1,10 @@
 import asyncio
 import random
+import socket
 
 # Constants
-SERVER_ADDRESS = ('localhost', 1234)
-BUFFER_SIZE = 1024
-
+SERVER_ADDRESS = ('localhost', 12345)  # Server address and port
+BUFFER_SIZE = 1024  # Buffer size for receiving data
 
 class QUICServerProtocol:
     def __init__(self, server):
@@ -28,13 +28,11 @@ class QUICServerProtocol:
         self.server.total_packet_rate += len(data)
 
         # Process the data (simulate file transfer)
-        # For simplicity, assume each packet contains a part of the file
         if data.endswith(b'EOF'):
             self.server.files_received += 1
             print("File received")
         else:
             self.server.total_data_rate += len(data)
-
 
 class QUICServer:
     def __init__(self):
@@ -45,9 +43,16 @@ class QUICServer:
         self.total_packet_rate = 0
 
     async def serve(self):
-        self.transport, _ = await asyncio.get_event_loop().create_datagram_endpoint(
+        loop = asyncio.get_event_loop()
+        # Create a socket and set SO_REUSEADDR option
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.bind(SERVER_ADDRESS)  # Bind the socket to the address
+
+        # Create a datagram endpoint using the socket
+        self.transport, _ = await loop.create_datagram_endpoint(
             lambda: QUICServerProtocol(self),
-            local_addr=SERVER_ADDRESS
+            sock=sock
         )
         print("Server started")
 
@@ -59,12 +64,10 @@ class QUICServer:
         # Perform cleanup tasks here
         pass
 
-
 async def main():
     server = QUICServer()
     await server.serve()
     print("Server closed")
-
 
 if __name__ == "__main__":
     asyncio.run(main())
